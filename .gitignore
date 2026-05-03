@@ -1,0 +1,29 @@
+# CMake build folder
+build/
+
+# Compiled output
+project/bin/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.sln
+*.vcxproj
+*.vcxproj.filters
+
+# Zed
+.zed/
+
+# Python cache (used by godot-cpp binding generator)
+__pycache__/
+*.pyc
+
+# Godot
+project/.godot/
