@@ -10,10 +10,6 @@ void TileChunk::_bind_methods() {
 
 }
 
-TileChunk::TileChunk() {
-    chunk_size = 8;
-}
-
 TileChunk::~TileChunk() {
     cleanup();
 }
@@ -63,7 +59,7 @@ void TileChunk::generate_mesh() {
     mesh.instantiate();
     mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, surface_array);
 
-    shader = ResourceLoader::get_singleton()->load("res://shaders/tile.gdshader");
+    shader = ResourceLoader::get_singleton()->load("res://shaders/block.gdshader");
     material.instantiate();
     material->set_shader(shader);
     mesh->surface_set_material(0, material);
@@ -74,12 +70,29 @@ void TileChunk::generate_chunk() {
         generate_mesh();
     }
 
-    int num_blocks = 0;
-    for (int i = 0; i < chunk_size * chunk_size; i++) {
-        tiles.push_back({ { 1, 0, 1 } });
-    }
-    for (int i = 0; i < tiles.size(); i++) {
-        num_blocks += tiles[i].blocks.size();
+    int num_blocks = CHUNK_SIZE * CHUNK_SIZE * TILE_SIZE;
+
+    // check if chunk_data size is valid
+    LocalVector<LocalVector<int>> chunk_data = {
+        {1, 1}, {1}, {1}, {1}, {1}, {1}, {1}, {1, 1},
+        {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1},
+        {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1},
+        {1}, {1}, {1}, {1, 1}, {1}, {1, 1}, {1}, {1},
+        {1}, {1}, {1}, {1, 1}, {1}, {1, 1}, {1}, {1},
+        {1}, {1}, {1}, {1, 1}, {1, 1}, {1, 1}, {1}, {1},
+        {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1},
+        {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1},
+    };
+
+    tiles.resize(CHUNK_SIZE * CHUNK_SIZE);
+    for (int x = 0; x < CHUNK_SIZE; x++) {
+        for (int z = 0; z < CHUNK_SIZE; z++) {
+            int t = z * CHUNK_SIZE + x;
+            tiles[t].blocks.resize(TILE_SIZE);
+            for (int y = 0; y < TILE_SIZE; y++) {
+                tiles[t].blocks[y] = y < chunk_data[t].size() ? chunk_data[t][y] : 0;
+            }
+        }
     }
 
     RenderingServer *rs = RenderingServer::get_singleton();
@@ -93,25 +106,22 @@ void TileChunk::generate_chunk() {
         false    // use_custom_data
     );
 
-    UtilityFunctions::print("num_blocks", num_blocks);
-
     const uint8_t stride = 12;
     PackedFloat32Array buffer;
     buffer.resize(num_blocks * stride);
     float *p = buffer.ptrw();
 
     int block = 0;
-    int tile = 0;
-    for (int x = 0; x < chunk_size; x++) {
-        for (int z = 0; z < chunk_size; z++) {
-            for (int y = 0; y < tiles[tile].blocks.size(); y++) {
+    for (int x = 0; x < CHUNK_SIZE; x++) {
+        for (int z = 0; z < CHUNK_SIZE; z++) {
+            for (int y = 0; y < TILE_SIZE; y++) {
+                if (tiles[z * CHUNK_SIZE + x].blocks[y] == 0) continue;
                 float *q = p + (block * stride);
                 q[0] = 1.0f; q[1] = 0.0f; q[2]  = 0.0f; q[3]  = x + 0.5f;
                 q[4] = 0.0f; q[5] = 1.0f; q[6]  = 0.0f; q[7]  = y - 0.5f;
                 q[8] = 0.0f; q[9] = 0.0f; q[10] = 1.0f; q[11] = z + 0.5f;
                 block++;
             }
-            tile++;
         }
     }
 
@@ -124,7 +134,6 @@ void TileChunk::cleanup() {
     RenderingServer *rs = RenderingServer::get_singleton();
     rs->free_rid(instance_rid);
     rs->free_rid(multimesh_rid);
-    tiles.clear();
 
     vertices.clear();
     normals.clear();

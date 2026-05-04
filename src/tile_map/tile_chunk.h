@@ -6,6 +6,9 @@
 #include <godot_cpp/classes/shader.hpp>
 #include "godot_cpp/classes/shader_material.hpp"
 
+constexpr uint8_t CHUNK_SIZE = 8;
+constexpr uint8_t TILE_SIZE = 2;
+
 struct Tile {
     godot::LocalVector<uint8_t> blocks;
 };
@@ -14,7 +17,6 @@ class TileChunk : public godot::Node3D {
     GDCLASS(TileChunk, godot::Node3D)
 
 private:
-    int chunk_size;
     godot::LocalVector<Tile> tiles;
     godot::RID multimesh_rid;
     godot::RID instance_rid;
@@ -80,7 +82,6 @@ protected:
     static void _bind_methods();
 
 public:
-    TileChunk();
     ~TileChunk();
     void _enter_tree() override;
     void _exit_tree() override;
