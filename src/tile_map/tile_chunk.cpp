@@ -19,7 +19,7 @@ TileChunk::~TileChunk() {
 }
 
 void TileChunk::_enter_tree() {
-    generate();
+    generate_chunk();
 }
 
 void TileChunk::_exit_tree() {
@@ -30,7 +30,7 @@ void TileChunk::_notification(int p_what) {
     switch (p_what) {
         case NOTIFICATION_EXTENSION_RELOADED:
             cleanup();
-            generate();
+            generate_chunk();
             break;
     }
 }
@@ -46,35 +46,40 @@ void TileChunk::add_face(Face face) {
     }
 }
 
-void TileChunk::generate() {
+void TileChunk::generate_mesh() {
+    surface_array.resize(Mesh::ARRAY_MAX);
+
+    add_face(Face::RIGHT);
+    add_face(Face::LEFT);
+    add_face(Face::TOP);
+    add_face(Face::BOTTOM);
+    add_face(Face::FRONT);
+    add_face(Face::BACK);
+
+    surface_array[Mesh::ARRAY_VERTEX] = vertices;
+    surface_array[Mesh::ARRAY_NORMAL] = normals;
+    surface_array[Mesh::ARRAY_COLOR] = colors;
+
+    mesh.instantiate();
+    mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, surface_array);
+
+    shader = ResourceLoader::get_singleton()->load("res://shaders/tile.gdshader");
+    material.instantiate();
+    material->set_shader(shader);
+    mesh->surface_set_material(0, material);
+}
+
+void TileChunk::generate_chunk() {
     if (mesh.is_null()) {
-        surface_array.resize(Mesh::ARRAY_MAX);
-
-        add_face(Face::RIGHT);
-        add_face(Face::LEFT);
-        add_face(Face::TOP);
-        add_face(Face::BOTTOM);
-        add_face(Face::FRONT);
-        add_face(Face::BACK);
-
-        surface_array[Mesh::ARRAY_VERTEX] = vertices;
-        surface_array[Mesh::ARRAY_NORMAL] = normals;
-        surface_array[Mesh::ARRAY_COLOR] = colors;
-
-        mesh.instantiate();
-        mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, surface_array);
-
-        shader = ResourceLoader::get_singleton()->load("res://shaders/tile.gdshader");
-        material.instantiate();
-        material->set_shader(shader);
-        mesh->surface_set_material(0, material);
+        generate_mesh();
     }
 
-    const uint32_t count = chunk_size * chunk_size;
-    cells.resize(count);
-
-    for (uint32_t i = 0; i < count; i++) {
-        cells[i] = {{1}};
+    int num_blocks = 0;
+    for (int i = 0; i < chunk_size * chunk_size; i++) {
+        tiles.push_back({ { 1, 0, 1 } });
+    }
+    for (int i = 0; i < tiles.size(); i++) {
+        num_blocks += tiles[i].blocks.size();
     }
 
     RenderingServer *rs = RenderingServer::get_singleton();
@@ -82,40 +87,31 @@ void TileChunk::generate() {
     rs->multimesh_set_mesh(multimesh_rid, mesh->get_rid());
     rs->multimesh_allocate_data(
         multimesh_rid,
-        count,
+        num_blocks,
         RenderingServer::MULTIMESH_TRANSFORM_3D,
         false,   // use_colors
         false    // use_custom_data
     );
 
+    UtilityFunctions::print("num_blocks", num_blocks);
+
     const uint8_t stride = 12;
     PackedFloat32Array buffer;
-    buffer.resize(count * stride);
-    float *s = buffer.ptrw();
+    buffer.resize(num_blocks * stride);
+    float *p = buffer.ptrw();
 
-    uint32_t i = 0;
+    int block = 0;
+    int tile = 0;
     for (int x = 0; x < chunk_size; x++) {
         for (int z = 0; z < chunk_size; z++) {
-            float *d = s + (i * stride);
-
-            // 0..11: Transform3D (basis + origin)
-            d[0] = 1.0f; d[1] = 0.0f; d[2]  = 0.0f; d[3]  = x + 0.5f;
-            d[4] = 0.0f; d[5] = 1.0f; d[6]  = 0.0f; d[7]  = -0.5f;
-            d[8] = 0.0f; d[9] = 0.0f; d[10] = 1.0f; d[11] = z + 0.5f;
-
-            // // 12..15: Instance color (shader: COLOR)
-            // d[12] = 1.0f;                 // r
-            // d[13] = 2.0f;                 // g
-            // d[14] = 3.0f;                 // b
-            // d[15] = 1.0f;                 // a
-
-            // // 16..19: Instance custom (shader: INSTANCE_CUSTOM)
-            // d[16] = 5.0f;
-            // d[17] = 6.0f;
-            // d[18] = 7.0f;
-            // d[19] = 8.0f;
-
-            i++;
+            for (int y = 0; y < tiles[tile].blocks.size(); y++) {
+                float *q = p + (block * stride);
+                q[0] = 1.0f; q[1] = 0.0f; q[2]  = 0.0f; q[3]  = x + 0.5f;
+                q[4] = 0.0f; q[5] = 1.0f; q[6]  = 0.0f; q[7]  = y - 0.5f;
+                q[8] = 0.0f; q[9] = 0.0f; q[10] = 1.0f; q[11] = z + 0.5f;
+                block++;
+            }
+            tile++;
         }
     }
 
@@ -128,13 +124,10 @@ void TileChunk::cleanup() {
     RenderingServer *rs = RenderingServer::get_singleton();
     rs->free_rid(instance_rid);
     rs->free_rid(multimesh_rid);
-    cells.clear();
+    tiles.clear();
 
     vertices.clear();
     normals.clear();
     colors.clear();
     surface_array.clear();
-    mesh.unref();
-    shader.unref();
-    material.unref();
 }

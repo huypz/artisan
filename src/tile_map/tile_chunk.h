@@ -2,13 +2,12 @@
 #define TILE_CHUNK_H
 
 #include <godot_cpp/classes/node3d.hpp>
-#include <godot_cpp/classes/box_mesh.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/shader.hpp>
 #include "godot_cpp/classes/shader_material.hpp"
 
-struct TileCellData {
-    std::array<int, 32> tiles;
+struct Tile {
+    godot::LocalVector<uint8_t> blocks;
 };
 
 class TileChunk : public godot::Node3D {
@@ -16,7 +15,7 @@ class TileChunk : public godot::Node3D {
 
 private:
     int chunk_size;
-    godot::LocalVector<TileCellData> cells;
+    godot::LocalVector<Tile> tiles;
     godot::RID multimesh_rid;
     godot::RID instance_rid;
 
@@ -42,7 +41,7 @@ private:
 
     enum Face : uint8_t { RIGHT, LEFT, TOP, BOTTOM, FRONT, BACK };
 
-    std::array<int, 36> face_indices = {
+    godot::Array face_indices = {
         1, 5, 6, 1, 6, 2,   // RIGHT
         3, 7, 4, 3, 4, 0,   // LEFT
         4, 7, 6, 4, 6, 5,   // TOP
@@ -71,7 +70,9 @@ private:
 
     void add_face(Face face);
 
-    void generate();
+    void generate_mesh();
+
+    void generate_chunk();
 
     void cleanup();
 
