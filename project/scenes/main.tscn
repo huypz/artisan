@@ -2,4 +2,4 @@
 
 [node name="Main" type="Node" unique_id=1948195418]
 
-[node name="TileChunk" type="TileChunk" parent="." unique_id=1712512018]
+[node name="Chunk" type="Chunk" parent="." unique_id=589877968]

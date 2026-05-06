@@ -18,9 +18,6 @@ compile_commands.json
 *.vcxproj
 *.vcxproj.filters
 
-# Zed
-.zed/
-
 # Python cache (used by godot-cpp binding generator)
 __pycache__/
 *.pyc

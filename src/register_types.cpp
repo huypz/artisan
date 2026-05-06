@@ -1,5 +1,5 @@
 #include "register_types.h"
-#include "tile_map/tile_chunk.h"
+#include "voxel_map/chunk.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -9,7 +9,7 @@ using namespace godot;
 
 void initialize_artisan_module(ModuleInitializationLevel p_level) {
     if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) return;
-    ClassDB::register_class<TileChunk>();
+    ClassDB::register_class<Chunk>();
 }
 
 void uninitialize_artisan_module(ModuleInitializationLevel p_level) {}

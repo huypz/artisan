@@ -15,6 +15,11 @@ run/main_scene="uid://bgbfvic3t0jic"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[display]
+
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
 [importer_defaults]
 
 texture={
@@ -56,4 +61,12 @@ rendering_device/driver.windows="d3d12"
 camera_angle={
 "type": "float",
 "value": 0.0
+}
+voxel_atlas={
+"type": "sampler2D",
+"value": "res://assets/textures/voxel/voxel_atlas.png"
+}
+voxel_table={
+"type": "sampler2D",
+"value": "res://assets/textures/voxel/voxel_table.exr"
 }

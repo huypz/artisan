@@ -1,0 +1,20 @@
+// Project-local debug tasks
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+  {
+    "label": "Build and Debug",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "program": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Godot Engine\\godot.windows.opt.tools.64.exe",
+    "args": ["--editor", "--path", "$ZED_WORKTREE_ROOT/project"],
+    "build": {
+      "command": "\"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && cmake -B build && cmake --build build --config Debug",
+      "shell": {
+        "program": "cmd.exe",
+      },
+      "cwd": "$ZED_WORKTREE_ROOT",
+    },
+  },
+]

@@ -1,17 +1,18 @@
 cmake_minimum_required(VERSION 3.17)
-project(artisan LANGUAGES CXX)
+set(GDEXTENSION_LIB_NAME artisan)
+
+project(${GDEXTENSION_LIB_NAME} LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(GODOTCPP_USE_HOT_RELOAD ON CACHE BOOL "" FORCE)
 add_subdirectory(godot-cpp)
 
 file(GLOB_RECURSE SOURCES src/*.cpp)
+add_library(${GDEXTENSION_LIB_NAME} SHARED ${SOURCES})
+target_link_libraries(${GDEXTENSION_LIB_NAME} PRIVATE godot-cpp)
 
-add_library(artisan SHARED ${SOURCES})
-
-target_link_libraries(artisan PRIVATE godot-cpp)
-
-set_target_properties(artisan PROPERTIES
+set_target_properties(${GDEXTENSION_LIB_NAME} PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF

@@ -1,23 +1,44 @@
-#ifndef TILE_CHUNK_H
-#define TILE_CHUNK_H
+#ifndef CHUNK_H
+#define CHUNK_H
 
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/shader.hpp>
+#include "godot_cpp/classes/texture2d.hpp"
 #include "godot_cpp/classes/shader_material.hpp"
+#include "godot_cpp/variant/packed_float32_array.hpp"
+#include "godot_cpp/variant/packed_vector2_array.hpp"
 
-constexpr uint8_t CHUNK_SIZE = 8;
-constexpr uint8_t TILE_SIZE = 2;
+inline constexpr int CHUNK_SIZE = 8;
 
-struct Tile {
-    godot::LocalVector<uint8_t> blocks;
+struct ChunkData {
+    godot::LocalVector<uint8_t> voxel_id;
+
+    void resize(int size) {
+        voxel_id.resize(size);
+        memset(voxel_id.ptr(), 0, size * sizeof(uint8_t));
+    }
+
+    static inline int index(int x, int y, int z) {
+        return x + CHUNK_SIZE * (z + CHUNK_SIZE * y);
+    }
+
+    uint8_t get(int x, int y, int z) const { return voxel_id[index(x, y, z)]; }
+    void set(int x, int y, int z, uint8_t new_voxel_type) { voxel_id[index(x, y, z)] = new_voxel_type; }
 };
 
-class TileChunk : public godot::Node3D {
-    GDCLASS(TileChunk, godot::Node3D)
+class Chunk : public godot::Node3D {
+    GDCLASS(Chunk, godot::Node3D)
+
+    enum Face : uint8_t { RIGHT, LEFT, TOP, BOTTOM, FRONT, BACK };
+
+    static inline int index(int x, int y, int z) {
+        return x + CHUNK_SIZE * (z + CHUNK_SIZE * y);
+    }
 
 private:
-    godot::LocalVector<Tile> tiles;
+    ChunkData data;
+
     godot::RID multimesh_rid;
     godot::RID instance_rid;
 
@@ -28,7 +49,7 @@ private:
     godot::Array surface_array;
     godot::PackedVector3Array vertices;
     godot::PackedVector3Array normals;
-    godot::PackedColorArray colors;
+    godot::PackedVector2Array uvs;
 
     godot::PackedVector3Array cube_vertices = {
         godot::Vector3(-0.5f, -0.5f,  0.5f),
@@ -41,15 +62,13 @@ private:
         godot::Vector3(-0.5f,  0.5f, -0.5f),
     };
 
-    enum Face : uint8_t { RIGHT, LEFT, TOP, BOTTOM, FRONT, BACK };
-
     godot::Array face_indices = {
         1, 5, 6, 1, 6, 2,   // RIGHT
         3, 7, 4, 3, 4, 0,   // LEFT
         4, 7, 6, 4, 6, 5,   // TOP
         3, 0, 1, 3, 1, 2,   // BOTTOM
         0, 4, 5, 0, 5, 1,   // FRONT
-        2, 6, 7, 2, 7, 3    // BACK
+        2, 6, 7, 2, 7, 3,    // BACK
     };
 
     godot::PackedVector3Array face_normals = {
@@ -58,16 +77,16 @@ private:
         godot::Vector3( 0,  1,  0),
         godot::Vector3( 0, -1,  0),
         godot::Vector3( 0,  0,  1),
-        godot::Vector3( 0,  0, -1)
+        godot::Vector3( 0,  0, -1),
     };
 
-    godot::PackedColorArray face_colors = {
-        godot::Color{ 1.0f, 0.0f, 0.0f, 1.0f },
-        godot::Color{ 1.0f, 1.0f, 0.0f, 1.0f },
-        godot::Color{ 0.0f, 1.0f, 0.0f, 1.0f },
-        godot::Color{ 0.0f, 1.0f, 1.0f, 1.0f },
-        godot::Color{ 0.0f, 0.0f, 1.0f, 1.0f },
-        godot::Color{ 1.0f, 0.0f, 1.0f, 1.0f }
+    godot::PackedVector2Array face_uvs = {
+        godot::Vector2(0, 1),
+        godot::Vector2(0, 0),
+        godot::Vector2(1, 0),
+        godot::Vector2(0, 1),
+        godot::Vector2(1, 0),
+        godot::Vector2(1, 1),
     };
 
     void add_face(Face face);
@@ -82,7 +101,7 @@ protected:
     static void _bind_methods();
 
 public:
-    ~TileChunk();
+    ~Chunk();
     void _enter_tree() override;
     void _exit_tree() override;
     void _notification(int p_what);
