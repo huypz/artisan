@@ -4,10 +4,10 @@
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/shader.hpp>
-#include "godot_cpp/classes/texture2d.hpp"
-#include "godot_cpp/classes/shader_material.hpp"
-#include "godot_cpp/variant/packed_float32_array.hpp"
-#include "godot_cpp/variant/packed_vector2_array.hpp"
+#include <godot_cpp/classes/texture2d.hpp>
+#include <godot_cpp/classes/shader_material.hpp>
+#include <godot_cpp/variant/packed_float32_array.hpp>
+#include <godot_cpp/variant/packed_vector2_array.hpp>
 
 inline constexpr int CHUNK_SIZE = 8;
 

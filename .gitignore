@@ -2,7 +2,8 @@
 build/
 
 # Compiled output
-project/bin/
+project/bin/*
+!project/bin/artisan.gdextension
 
 # CMake generated files
 CMakeCache.txt

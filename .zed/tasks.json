@@ -3,8 +3,18 @@
 // Example:
 [
   {
-    "label": "Build",
-    "command": "\"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && cmake -B build && cmake --build build",
+    "label": "Build Debug (Ninja)",
+    "command": "\"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && cmake -B build/Debug -G Ninja -DCMAKE_BUILD_TYPE=Debug && cmake --build build/Debug",
+    "shell": {
+      "program": "cmd.exe",
+    },
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+  },
+  {
+    "label": "Build Release (Ninja)",
+    "command": "\"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && cmake -B build/Release -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build/Release",
     "shell": {
       "program": "cmd.exe",
     },

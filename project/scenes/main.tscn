@@ -3,3 +3,6 @@
 [node name="Main" type="Node" unique_id=1948195418]
 
 [node name="Chunk" type="Chunk" parent="." unique_id=589877968]
+
+[node name="Player" type="Player" parent="." unique_id=1443326115]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5557552, 0, 3.3604937)

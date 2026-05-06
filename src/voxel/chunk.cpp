@@ -1,15 +1,13 @@
 #include "chunk.h"
 
-#include "godot_cpp/variant/packed_float32_array.hpp"
+#include <godot_cpp/variant/packed_float32_array.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/world3d.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 
 using namespace godot;
 
-void Chunk::_bind_methods() {
-
-}
+void Chunk::_bind_methods() {}
 
 Chunk::~Chunk() {
     cleanup();

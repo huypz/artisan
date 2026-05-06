@@ -1,0 +1,8 @@
+[configuration]
+entry_symbol = "artisan_library_init"
+compatibility_minimum = "4.6"
+reloadable = true
+
+[libraries]
+windows.debug.x86_64 = "res://bin/Debug/artisan.dll"
+windows.release.x86_64 = "res://bin/Release/artisan.dll"

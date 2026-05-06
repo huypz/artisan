@@ -1,14 +1,33 @@
 #include "register_types.h"
-#include "voxel_map/chunk.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+// entities
+#include "entities/entity.h"
+// game
+#include "game/game.h"
+#include "game/camera.h"
+// player
+#include "player/player.h"
+// voxel
+#include "voxel/chunk.h"
+
+
+
 using namespace godot;
 
 void initialize_artisan_module(ModuleInitializationLevel p_level) {
     if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) return;
+    // entities
+    ClassDB::register_class<Entity>();
+    // game
+    ClassDB::register_class<Game>();
+    ClassDB::register_class<Camera>();
+    // player
+    ClassDB::register_class<Player>();
+    // voxel
     ClassDB::register_class<Chunk>();
 }
 
