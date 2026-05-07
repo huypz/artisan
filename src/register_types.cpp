@@ -4,27 +4,29 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+// core
+#include "core/camera.h"
+#include "core/gui.h"
+#include "core/main.h"
+#include "core/world.h"
 // entities
 #include "entities/entity.h"
-// game
-#include "game/game.h"
-#include "game/camera.h"
 // player
 #include "player/player.h"
 // voxel
 #include "voxel/chunk.h"
 
-
-
 using namespace godot;
 
 void initialize_artisan_module(ModuleInitializationLevel p_level) {
     if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) return;
+    // core
+    ClassDB::register_class<Camera>();
+    ClassDB::register_class<GUI>();
+    ClassDB::register_class<Main>();
+    ClassDB::register_class<World>();
     // entities
     ClassDB::register_class<Entity>();
-    // game
-    ClassDB::register_class<Game>();
-    ClassDB::register_class<Camera>();
     // player
     ClassDB::register_class<Player>();
     // voxel

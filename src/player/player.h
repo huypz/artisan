@@ -1,5 +1,4 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#pragma once
 
 #include <godot_cpp/classes/sprite3d.hpp>
 
@@ -24,5 +23,3 @@ public:
     void _process(double delta) override;
     void _physics_process(double delta) override;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#pragma once
 
 #include <godot_cpp/classes/camera3d.hpp>
 
@@ -17,5 +16,3 @@ public:
 
     void set_target(godot::Node3D *new_target);
 };
-
-#endif

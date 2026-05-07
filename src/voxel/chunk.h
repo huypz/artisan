@@ -1,5 +1,4 @@
-#ifndef CHUNK_H
-#define CHUNK_H
+#pragma once
 
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
@@ -106,5 +105,3 @@ public:
     void _exit_tree() override;
     void _notification(int p_what);
 };
-
-#endif
