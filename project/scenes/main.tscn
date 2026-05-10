@@ -1,3 +1,5 @@
 [gd_scene format=3 uid="uid://bgbfvic3t0jic"]
 
 [node name="Main" type="Main" unique_id=661058930]
+
+[node name="VoxelGrid" type="VoxelGrid" parent="." unique_id=1882566786]

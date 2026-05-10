@@ -14,7 +14,9 @@
 // player
 #include "player/player.h"
 // voxel
-#include "voxel/chunk.h"
+#include "voxel/voxel_chunk.h"
+#include "voxel/voxel_column.h"
+#include "voxel/voxel_grid.h"
 
 using namespace godot;
 
@@ -30,7 +32,9 @@ void initialize_artisan_module(ModuleInitializationLevel p_level) {
     // player
     ClassDB::register_class<Player>();
     // voxel
-    ClassDB::register_class<Chunk>();
+    ClassDB::register_class<VoxelChunk>();
+    ClassDB::register_class<VoxelColumn>();
+    ClassDB::register_class<VoxelGrid>();
 }
 
 void uninitialize_artisan_module(ModuleInitializationLevel p_level) {}

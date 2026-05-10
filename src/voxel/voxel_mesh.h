@@ -1,49 +1,14 @@
 #pragma once
 
-#include <godot_cpp/classes/node3d.hpp>
+#include "godot_cpp/variant/vector3.hpp"
 #include <godot_cpp/classes/array_mesh.hpp>
-#include <godot_cpp/classes/shader.hpp>
-#include <godot_cpp/classes/texture2d.hpp>
-#include <godot_cpp/classes/shader_material.hpp>
-#include <godot_cpp/variant/packed_float32_array.hpp>
-#include <godot_cpp/variant/packed_vector2_array.hpp>
 
-inline constexpr int CHUNK_SIZE = 8;
+enum Face : uint8_t { RIGHT, LEFT, TOP, BOTTOM, FRONT, BACK };
 
-struct ChunkData {
-    godot::LocalVector<uint8_t> voxel_id;
-
-    void resize(int size) {
-        voxel_id.resize(size);
-        memset(voxel_id.ptr(), 0, size * sizeof(uint8_t));
-    }
-
-    static inline int index(int x, int y, int z) {
-        return x + CHUNK_SIZE * (z + CHUNK_SIZE * y);
-    }
-
-    uint8_t get(int x, int y, int z) const { return voxel_id[index(x, y, z)]; }
-    void set(int x, int y, int z, uint8_t new_voxel_type) { voxel_id[index(x, y, z)] = new_voxel_type; }
-};
-
-class Chunk : public godot::Node3D {
-    GDCLASS(Chunk, godot::Node3D)
-
-    enum Face : uint8_t { RIGHT, LEFT, TOP, BOTTOM, FRONT, BACK };
-
-    static inline int index(int x, int y, int z) {
-        return x + CHUNK_SIZE * (z + CHUNK_SIZE * y);
-    }
+class VoxelMesh {
 
 private:
-    ChunkData data;
-
-    godot::RID multimesh_rid;
-    godot::RID instance_rid;
-
     godot::Ref<godot::ArrayMesh> mesh;
-    godot::Ref<godot::Shader> shader;
-    godot::Ref<godot::ShaderMaterial> material;
 
     godot::Array surface_array;
     godot::PackedVector3Array vertices;
@@ -88,20 +53,9 @@ private:
         godot::Vector2(1, 1),
     };
 
+public:
     void add_face(Face face);
-
     void generate_mesh();
 
-    void generate_chunk();
-
-    void cleanup();
-
-protected:
-    static void _bind_methods();
-
-public:
-    ~Chunk();
-    void _enter_tree() override;
-    void _exit_tree() override;
-    void _notification(int p_what);
+    godot::RID get_rid() const;
 };
