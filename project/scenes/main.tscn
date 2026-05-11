@@ -3,5 +3,3 @@
 [node name="Main" type="Main" unique_id=661058930]
 
 [node name="VoxelGrid" type="VoxelGrid" parent="." unique_id=321134696]
-chunk_count_x = 2
-chunk_count_z = 2

@@ -110,7 +110,9 @@ void VoxelGrid::create_column(int x, int z, int i) {
         z * VoxelMetrics::LENGTH_Z + 0.5f
     );
     VoxelColumn* column = memnew(VoxelColumn);
-    column->world_position = position;
+    column->world_x = position.x;
+    column->world_y = position.y;
+    column->world_z = position.z;
     // assign column to chunk
     int chunk_x = position.x / VoxelMetrics::CHUNK_SIZE_X;
     int chunk_z = position.z / VoxelMetrics::CHUNK_SIZE_Z;

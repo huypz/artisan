@@ -31,4 +31,5 @@ private:
     godot::RID instance_rid;
     godot::RID shader_rid;
     godot::RID material_rid;
+    int num_voxels;
 };
