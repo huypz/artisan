@@ -9,17 +9,6 @@ class VoxelColumn;
 class VoxelChunk : public godot::Node3D {
     GDCLASS(VoxelChunk, godot::Node3D)
 
-private:
-    godot::LocalVector<VoxelColumn*> columns;
-
-    VoxelMesh mesh;
-    godot::RID multimesh_rid;
-    godot::RID instance_rid;
-    godot::RID shader_rid;
-    godot::RID material_rid;
-
-    godot::PackedFloat32Array buffer;
-
 protected:
     static void _bind_methods();
 
@@ -32,4 +21,14 @@ public:
     void build_buffer();
     void upload_buffer();
     void free_mesh();
+
+private:
+    godot::LocalVector<VoxelColumn*> columns;
+
+    VoxelMesh mesh;
+    godot::PackedFloat32Array buffer;
+    godot::RID multimesh_rid;
+    godot::RID instance_rid;
+    godot::RID shader_rid;
+    godot::RID material_rid;
 };

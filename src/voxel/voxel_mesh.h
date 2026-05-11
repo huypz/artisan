@@ -1,15 +1,18 @@
 #pragma once
 
-#include "godot_cpp/variant/vector3.hpp"
 #include <godot_cpp/classes/array_mesh.hpp>
 
 enum Face : uint8_t { RIGHT, LEFT, TOP, BOTTOM, FRONT, BACK };
 
 class VoxelMesh {
 
+public:
+    void add_face(Face face);
+    void generate_mesh();
+    godot::RID get_rid() const;
+
 private:
     godot::Ref<godot::ArrayMesh> mesh;
-
     godot::Array surface_array;
     godot::PackedVector3Array vertices;
     godot::PackedVector3Array normals;
@@ -52,10 +55,4 @@ private:
         godot::Vector2(1, 0),
         godot::Vector2(1, 1),
     };
-
-public:
-    void add_face(Face face);
-    void generate_mesh();
-
-    godot::RID get_rid() const;
 };

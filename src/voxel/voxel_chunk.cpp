@@ -3,10 +3,8 @@
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/world3d.hpp>
 
-#include "voxel/voxel_mesh.h"
 #include "voxel/voxel_column.h"
 #include "voxel/voxel_metrics.h"
-
 
 using namespace godot;
 
@@ -24,7 +22,6 @@ void VoxelChunk::_exit_tree() {
 
 void VoxelChunk::assign_column(int index, VoxelColumn* column) {
     columns[index] = column;
-    add_child(column);
 }
 
 void VoxelChunk::build_buffer() {
