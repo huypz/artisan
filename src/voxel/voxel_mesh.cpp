@@ -23,4 +23,6 @@ void VoxelMesh::generate_mesh() {
     mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, surface_array);
 }
 
-RID VoxelMesh::get_rid() const { return mesh->get_rid(); }
+RID VoxelMesh::get_rid() const {
+    return mesh->get_rid();
+}

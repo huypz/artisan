@@ -1,26 +1,31 @@
 #include "voxel_grid.h"
 
-#include "godot_cpp/classes/mesh_instance3d.hpp"
+#include <godot_cpp/classes/mesh_instance3d.hpp>
+#include <godot_cpp/classes/worker_thread_pool.hpp>
+
 #include "voxel/voxel_column.h"
 #include "voxel/voxel_metrics.h"
 #include "voxel_chunk.h"
 
 using namespace godot;
 
-void VoxelGrid::_bind_methods() {}
+void VoxelGrid::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("set_chunk_count_x", "value"), &VoxelGrid::set_chunk_count_x);
+    ClassDB::bind_method(D_METHOD("get_chunk_count_x"),          &VoxelGrid::get_chunk_count_x);
+    ClassDB::bind_method(D_METHOD("set_chunk_count_z", "value"), &VoxelGrid::set_chunk_count_z);
+    ClassDB::bind_method(D_METHOD("get_chunk_count_z"),          &VoxelGrid::get_chunk_count_z);
 
-VoxelGrid::VoxelGrid() {
-    chunk_count_x = 3;
-    chunk_count_z = 3;
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "chunk_count_x"), "set_chunk_count_x", "get_chunk_count_x");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "chunk_count_z"), "set_chunk_count_z", "get_chunk_count_z");
 }
 
-void VoxelGrid::_notification(int p_what) {
-    switch(p_what) {
-        case NOTIFICATION_EXTENSION_RELOADED:
-            free();
-            build();
-            break;
-    }
+VoxelGrid::VoxelGrid() {
+    chunk_count_x = 1;
+    chunk_count_z = 1;
+}
+
+void VoxelGrid::_process(float delta) {
+
 }
 
 void VoxelGrid::_enter_tree() {
@@ -40,13 +45,14 @@ void VoxelGrid::create_column(int x, int z, int i) {
     VoxelColumn* column = memnew(VoxelColumn);
     column->set_name(vformat("Column_%d_%d", x, z));
     column->set_position(position);
+    column->world_position = position;
     // assign column to chunk
     int chunk_x = position.x / VoxelMetrics::CHUNK_SIZE_X;
     int chunk_z = position.z / VoxelMetrics::CHUNK_SIZE_Z;
-    VoxelChunk *chunk = chunks[chunk_x + chunk_z * chunk_count_z];
+    VoxelChunk *chunk = chunks[chunk_x + chunk_z * chunk_count_x];
     int local_x = x - chunk_x * VoxelMetrics::CHUNK_SIZE_X;
     int local_z = z - chunk_z * VoxelMetrics::CHUNK_SIZE_Z;
-    chunk->assign_column(local_x + local_z * VoxelMetrics::CHUNK_SIZE_Z, column);
+    chunk->assign_column(local_x + local_z * VoxelMetrics::CHUNK_SIZE_X, column);
 }
 
 void VoxelGrid::create_columns() {
@@ -54,7 +60,7 @@ void VoxelGrid::create_columns() {
     int column_count_z = chunk_count_z * VoxelMetrics::CHUNK_SIZE_Z;
     for (int z = 0; z < column_count_z; z++) {
         for (int x = 0; x < column_count_x; x++) {
-            create_column(x, z, x + z * column_count_z);
+            create_column(x, z, x + z * column_count_x);
         }
     }
 }
@@ -72,16 +78,50 @@ void VoxelGrid::create_chunks() {
 }
 
 void VoxelGrid::build() {
+    ERR_FAIL_COND_MSG(
+        chunk_count_x <= 0 || chunk_count_z <= 0,
+        "chunk_count_x and chunk_count_z must be greater than 0"
+    );
+
     create_chunks();
     create_columns();
+
     for (int i = 0; i < chunks.size(); i++) {
-        chunks[i]->build_mesh();
+        WorkerThreadPool::get_singleton()->add_task(
+            callable_mp(chunks[i], &VoxelChunk::build_buffer)
+        );
     }
 }
 
 void VoxelGrid::free() {
     for (VoxelChunk* chunk : chunks) {
-        if (chunk) chunk->queue_free();
+        if (chunk) {
+            chunk->queue_free();
+        }
     }
     chunks.clear();
+}
+
+void VoxelGrid::set_chunk_count_x(int value) {
+    chunk_count_x = value;
+    if (is_inside_tree()) {
+        free();
+        build();
+    }
+}
+
+int VoxelGrid::get_chunk_count_x() const {
+    return chunk_count_x;
+}
+
+void VoxelGrid::set_chunk_count_z(int value) {
+    chunk_count_z = value;
+    if (is_inside_tree()) {
+        free();
+        build();
+    }
+}
+
+int VoxelGrid::get_chunk_count_z() const {
+    return chunk_count_z;
 }

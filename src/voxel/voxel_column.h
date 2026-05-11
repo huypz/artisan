@@ -8,4 +8,7 @@ class VoxelColumn : public godot::Node3D {
 protected:
     static void _bind_methods();
 
+public:
+    godot::Vector3 world_position;
+
 };

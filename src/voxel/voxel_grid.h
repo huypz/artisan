@@ -24,14 +24,17 @@ protected:
 
 public:
     VoxelGrid();
-    void _notification(int p_what);
+
+    void _process(float delta);
+
     void _enter_tree() override;
     void _exit_tree() override;
 
     void build();
     void free();
 
-    VoxelChunk* get_chunk(int x, int z) const;
-    VoxelColumn* get_column(int x, int z) const;
-    Voxel* get_voxel(int x, int y, int z) const;
+    void  set_chunk_count_x(int value);
+    int   get_chunk_count_x() const;
+    void  set_chunk_count_z(int value);
+    int   get_chunk_count_z() const;
 };

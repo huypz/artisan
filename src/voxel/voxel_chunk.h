@@ -15,6 +15,8 @@ private:
     VoxelMesh mesh;
     godot::RID multimesh_rid;
     godot::RID instance_rid;
+    godot::RID shader_rid;
+    godot::RID material_rid;
 
     godot::PackedFloat32Array buffer;
 
@@ -27,8 +29,7 @@ public:
 
     void assign_column(int index, VoxelColumn* column);
 
-    void build_mesh();
-    void buffer_mesh();
+    void build_buffer();
+    void upload_buffer();
     void free_mesh();
-    void rebuild_mesh();
 };
