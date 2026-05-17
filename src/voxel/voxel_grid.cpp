@@ -1,33 +1,40 @@
 #include "voxel_grid.h"
 
 #include <godot_cpp/classes/mesh_instance3d.hpp>
-#include <godot_cpp/classes/worker_thread_pool.hpp>
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/core/math.hpp>
-#include <godot_cpp/variant/utility_functions.hpp>
 
-#include "voxel/voxel_column.h"
 #include "voxel/voxel_metrics.h"
 #include "voxel_chunk.h"
 
 using namespace godot;
 
 void VoxelGrid::_bind_methods() {
+    // Chunk
     ClassDB::bind_method(D_METHOD("set_chunk_count_x", "value"), &VoxelGrid::set_chunk_count_x);
     ClassDB::bind_method(D_METHOD("get_chunk_count_x"),          &VoxelGrid::get_chunk_count_x);
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "chunk_count_x"), "set_chunk_count_x", "get_chunk_count_x");
+    ClassDB::bind_method(D_METHOD("set_chunk_count_y", "value"), &VoxelGrid::set_chunk_count_y);
+    ClassDB::bind_method(D_METHOD("get_chunk_count_y"),          &VoxelGrid::get_chunk_count_y);
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "chunk_count_y"), "set_chunk_count_y", "get_chunk_count_y");
     ClassDB::bind_method(D_METHOD("set_chunk_count_z", "value"), &VoxelGrid::set_chunk_count_z);
     ClassDB::bind_method(D_METHOD("get_chunk_count_z"),          &VoxelGrid::get_chunk_count_z);
-
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "chunk_count_x"), "set_chunk_count_x", "get_chunk_count_x");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "chunk_count_z"), "set_chunk_count_z", "get_chunk_count_z");
+
+    // Editor
+    ClassDB::bind_method(D_METHOD("set_brush_texture", "value"), &VoxelGrid::set_brush_texture);
+    ClassDB::bind_method(D_METHOD("get_brush_texture"),          &VoxelGrid::get_brush_texture);
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "brush_texture"), "set_brush_texture", "get_brush_texture");
 }
 
 VoxelGrid::VoxelGrid() {
     chunk_count_x = 1;
+    chunk_count_y = 1;
     chunk_count_z = 1;
+    brush_texture = 1;
 }
 
 void VoxelGrid::_process(double delta) {
@@ -48,8 +55,7 @@ void VoxelGrid::_input(const Ref<InputEvent>& event) {
 
         VoxelHit hit_result;
         if (raycast_voxel(ray_origin, ray_dir, hit_result)) {
-            UtilityFunctions::print("hit voxel at ", hit_result.hit_pos, " and face ", hit_result.face);
-
+            paint_face(hit_result, brush_texture);
         }
     }
 }
@@ -71,13 +77,6 @@ void VoxelGrid::build() {
     );
 
     create_chunks();
-    create_columns();
-
-    for (int i = 0; i < chunks.size(); i++) {
-        WorkerThreadPool::get_singleton()->add_task(
-            callable_mp(chunks[i], &VoxelChunk::build_buffer)
-        );
-    }
 }
 
 void VoxelGrid::free() {
@@ -89,34 +88,35 @@ void VoxelGrid::free() {
     chunks.clear();
 }
 
-Voxel* VoxelGrid::get_voxel(Vector3 position) {
-    if (position.x < 0 || position.z < 0) {
+VoxelChunk* VoxelGrid::get_chunk(Vector3 position) {
+    if (position.x < 0 || position.y < 0 || position.z < 0) {
         return nullptr;
     }
 
-    int chunk_x = (int)Math::floor(position.x) / VoxelMetrics::CHUNK_SIZE_X;
-    int chunk_z = (int)Math::floor(position.z) / VoxelMetrics::CHUNK_SIZE_Z;
-    if (chunk_x < 0 || chunk_x >= chunk_count_x ||
-        chunk_z < 0 || chunk_z >= chunk_count_z) {
+    int chunk_x = (int)position.x / VoxelMetrics::CHUNK_SIZE_X;
+    int chunk_y = (int)position.y / VoxelMetrics::CHUNK_SIZE_Y;
+    int chunk_z = (int)position.z / VoxelMetrics::CHUNK_SIZE_Z;
+
+    if (chunk_x >= chunk_count_x ||
+        chunk_y >= chunk_count_y ||
+        chunk_z >= chunk_count_z) {
         return nullptr;
     }
-    VoxelChunk* chunk = chunks[chunk_x + chunk_z * chunk_count_x];
-    if (chunk == nullptr) {
+
+    return chunks[chunk_x + chunk_y * chunk_count_x + chunk_z * chunk_count_x * chunk_count_y];
+}
+
+Voxel* VoxelGrid::get_voxel(Vector3 position) {
+    VoxelChunk* chunk = get_chunk(position);
+    if (!chunk) {
         return nullptr;
     }
+
     int local_x = (int)Math::floor(position.x) % VoxelMetrics::CHUNK_SIZE_X;
+    int local_y = (int)Math::floor(position.y) % VoxelMetrics::CHUNK_SIZE_Y;
     int local_z = (int)Math::floor(position.z) % VoxelMetrics::CHUNK_SIZE_Z;
 
-    int y = Math::floor(position.y);
-    if (y < 0 || y >= VoxelMetrics::CHUNK_SIZE_Y) {
-        return nullptr;
-    }
-    VoxelColumn* column = chunk->get_column(local_x, local_z);
-    if (column == nullptr) {
-        return nullptr;
-    }
-
-    return &(*column)[y];
+    return chunk->get_voxel(local_x, local_y, local_z);
 }
 
 void VoxelGrid::set_chunk_count_x(int value) {
@@ -129,6 +129,18 @@ void VoxelGrid::set_chunk_count_x(int value) {
 
 int VoxelGrid::get_chunk_count_x() const {
     return chunk_count_x;
+}
+
+void VoxelGrid::set_chunk_count_y(int value) {
+    chunk_count_y = value;
+    if (is_inside_tree()) {
+        free();
+        build();
+    }
+}
+
+int VoxelGrid::get_chunk_count_y() const {
+    return chunk_count_y;
 }
 
 void VoxelGrid::set_chunk_count_z(int value) {
@@ -144,42 +156,23 @@ int VoxelGrid::get_chunk_count_z() const {
 }
 
 void VoxelGrid::create_chunks() {
-    chunks.resize(chunk_count_x * chunk_count_z);
+    chunks.resize(chunk_count_x * chunk_count_y * chunk_count_z);
 
-    for (int z = 0, i = 0; z < chunk_count_z; z++) {
-        for (int x = 0; x < chunk_count_x; x++, i++) {
-            VoxelChunk *chunk = chunks[i] = memnew(VoxelChunk);
-            chunk->set_name(vformat("Chunk_%d_%d", x, z));
-            add_child(chunk);
-        }
-    }
-}
+    for (int z = 0; z < chunk_count_z; z++) {
+        for (int y = 0; y < chunk_count_y; y++) {
+            for (int x = 0; x < chunk_count_x; x++) {
+                int i = x + y * chunk_count_x + z * chunk_count_x * chunk_count_y;
+                VoxelChunk *chunk = chunks[i] = memnew(VoxelChunk);
+                chunk->set_name(vformat("Chunk_%d_%d_%d", x, y, z));
+                chunk->set_position(Vector3(
+                    x * VoxelMetrics::CHUNK_SIZE_X,
+                    y * VoxelMetrics::CHUNK_SIZE_Y,
+                    z * VoxelMetrics::CHUNK_SIZE_Z
+                ));
+                add_child(chunk);
 
-void VoxelGrid::create_column(int x, int z, int i) {
-    Vector3 position(
-        x * VoxelMetrics::LENGTH_X + 0.5f,
-        0.5f,
-        z * VoxelMetrics::LENGTH_Z + 0.5f
-    );
-    VoxelColumn* column = memnew(VoxelColumn);
-    column->world_x = position.x;
-    column->world_y = position.y;
-    column->world_z = position.z;
-    // assign column to chunk
-    int chunk_x = position.x / VoxelMetrics::CHUNK_SIZE_X;
-    int chunk_z = position.z / VoxelMetrics::CHUNK_SIZE_Z;
-    VoxelChunk *chunk = chunks[chunk_x + chunk_z * chunk_count_x];
-    int local_x = x - chunk_x * VoxelMetrics::CHUNK_SIZE_X;
-    int local_z = z - chunk_z * VoxelMetrics::CHUNK_SIZE_Z;
-    chunk->assign_column(local_x + local_z * VoxelMetrics::CHUNK_SIZE_X, column);
-}
-
-void VoxelGrid::create_columns() {
-    int column_count_x = chunk_count_x * VoxelMetrics::CHUNK_SIZE_X;
-    int column_count_z = chunk_count_z * VoxelMetrics::CHUNK_SIZE_Z;
-    for (int z = 0; z < column_count_z; z++) {
-        for (int x = 0; x < column_count_x; x++) {
-            create_column(x, z, x + z * column_count_x);
+                chunk->build_mesh();
+            }
         }
     }
 }
@@ -188,10 +181,27 @@ void VoxelGrid::create_columns() {
 
 #pragma region Editor
 
+void VoxelGrid::paint_face(const VoxelHit& hit, int texture) {
+    Voxel new_voxel = *hit.voxel;
+    new_voxel.face_tex[hit.face] = texture;
+
+    VoxelChunk* chunk = get_chunk(hit.voxel_pos);
+    int local_index = chunk->get_index(hit.voxel_pos.x, hit.voxel_pos.y, hit.voxel_pos.z);
+    chunk->set_voxel(local_index, new_voxel);
+}
+
+void VoxelGrid::set_brush_texture(int value) {
+    brush_texture = value;
+}
+
+int VoxelGrid::get_brush_texture() const {
+    return brush_texture;
+}
+
 bool VoxelGrid::raycast_voxel(Vector3 origin, Vector3 direction, VoxelHit& hit_result) {
     origin = to_local(origin);
 
-    Vector3i voxel_pos(
+    Vector3i pos(
         Math::floor(origin.x),
         Math::floor(origin.y),
         Math::floor(origin.z)
@@ -210,40 +220,45 @@ bool VoxelGrid::raycast_voxel(Vector3 origin, Vector3 direction, VoxelHit& hit_r
     );
 
     Vector3 t_max(
-        ((step.x > 0 ? voxel_pos.x + 1 : voxel_pos.x) - origin.x) / direction.x,
-        ((step.y > 0 ? voxel_pos.y + 1 : voxel_pos.y) - origin.y) / direction.y,
-        ((step.z > 0 ? voxel_pos.z + 1 : voxel_pos.z) - origin.z) / direction.z
+        ((step.x > 0 ? pos.x + 1 : pos.x) - origin.x) / direction.x,
+        ((step.y > 0 ? pos.y + 1 : pos.y) - origin.y) / direction.y,
+        ((step.z > 0 ? pos.z + 1 : pos.z) - origin.z) / direction.z
     );
 
-    float t_hit = 0.0f;
+    // edge case check - camera inside voxel
+    float t_hit;
     Face face;
-    const int MAX_STEPS = 20;
-    for (int i = 0; i < MAX_STEPS; i++) {
-        Voxel* voxel = get_voxel(voxel_pos);
-        if (voxel && voxel->type) {
-            hit_result.voxel = voxel;
-            hit_result.voxel_pos = voxel_pos;
-            hit_result.face = face;
-            hit_result.hit_pos = origin + direction * t_hit;
-            return true;
-        }
-
+    auto step_dda = [&]() {
         if (t_max.x < t_max.y && t_max.x < t_max.z) {
             t_hit = t_max.x;
-            voxel_pos.x += step.x;
+            pos.x += step.x;
             t_max.x += t_delta.x;
             face = step.x > 0 ? Face::LEFT : Face::RIGHT;
         } else if (t_max.y < t_max.z) {
             t_hit = t_max.y;
-            voxel_pos.y += step.y;
+            pos.y += step.y;
             t_max.y += t_delta.y;
             face = step.y > 0 ? Face::BOTTOM : Face::TOP;
         } else {
             t_hit = t_max.z;
-            voxel_pos.z += step.z;
+            pos.z += step.z;
             t_max.z += t_delta.z;
             face = step.z > 0 ? Face::BACK : Face::FRONT;
         }
+    };
+    step_dda(); // first step - skips starting voxel, face now valid
+
+    const int MAX_STEPS = 50;
+    for (int i = 0; i < MAX_STEPS; i++) {
+        Voxel* voxel = get_voxel(pos);
+        if (voxel && voxel->type != 0) {
+            hit_result.voxel     = voxel;
+            hit_result.voxel_pos = pos;
+            hit_result.face      = face;
+            hit_result.hit_pos   = origin + direction * t_hit;
+            return true;
+        }
+        step_dda();
     }
 
     return false;

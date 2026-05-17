@@ -1,8 +1,10 @@
 #pragma once
 
 #include <godot_cpp/classes/node3d.hpp>
+#include <godot_cpp/classes/array_mesh.hpp>
 
-#include "voxel/voxel_mesh.h"
+#include "voxel/voxel_metrics.h"
+#include "voxel.h"
 
 class VoxelColumn;
 
@@ -16,22 +18,21 @@ public:
     void _enter_tree() override;
     void _exit_tree() override;
 
-    void assign_column(int index, VoxelColumn* column);
-
-    void build_buffer();
-    void upload_buffer();
+    void init();
+    void build_mesh();
     void free_mesh();
 
-    VoxelColumn* get_column(int local_x, int local_z);
+    int get_index(int x, int y, int z);
+    void set_voxel(int index, Voxel new_voxel);
+    Voxel* get_voxel(int x, int y, int z);
 
 private:
-    godot::LocalVector<VoxelColumn*> columns;
-
-    VoxelMesh mesh;
-    godot::PackedFloat32Array buffer;
-    godot::RID multimesh_rid;
+    static constexpr int NUM_VOXELS = VoxelMetrics::CHUNK_SIZE_X *
+                                      VoxelMetrics::CHUNK_SIZE_Y *
+                                      VoxelMetrics::CHUNK_SIZE_Z;
+    Voxel voxels[NUM_VOXELS];
+    godot::Ref<godot::ArrayMesh> mesh;
     godot::RID instance_rid;
     godot::RID shader_rid;
     godot::RID material_rid;
-    int num_voxels;
 };

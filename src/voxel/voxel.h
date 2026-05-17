@@ -1,8 +1,6 @@
 #pragma once
 
-#include <cstdint>
-
 struct Voxel {
-    uint8_t type = 0;
-    uint8_t face_tex[6] = {};
+    int type = 0;
+    int face_tex[6] = { 0, 0, 0, 0, 0, 0 };
 };

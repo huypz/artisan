@@ -2,4 +2,8 @@
 
 [node name="Main" type="Main" unique_id=661058930]
 
-[node name="VoxelGrid" type="VoxelGrid" parent="." unique_id=321134696]
+[node name="VoxelGrid" type="VoxelGrid" parent="." unique_id=1533283403]
+chunk_count_x = 2
+chunk_count_y = 2
+chunk_count_z = 2
+brush_texture = 4

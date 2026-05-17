@@ -7,7 +7,8 @@
 class VoxelChunk;
 class VoxelColumn;
 struct Voxel;
-enum Face : uint8_t;
+
+enum Face : uint8_t { RIGHT, LEFT, TOP, BOTTOM, FRONT, BACK };
 
 class VoxelGrid : public godot::Node3D {
     GDCLASS(VoxelGrid, godot::Node3D)
@@ -28,20 +29,22 @@ public:
     void build();
     void free();
 
+    VoxelChunk* get_chunk(godot::Vector3 position);
     Voxel* get_voxel(godot::Vector3 position);
 
     void  set_chunk_count_x(int value);
     int   get_chunk_count_x() const;
+    void  set_chunk_count_y(int value);
+    int   get_chunk_count_y() const;
     void  set_chunk_count_z(int value);
     int   get_chunk_count_z() const;
 
 private:
     int chunk_count_x;
+    int chunk_count_y;
     int chunk_count_z;
     godot::LocalVector<VoxelChunk*> chunks;
     void create_chunks();
-    void create_column(int x, int z, int i);
-    void create_columns();
 
 #pragma endregion
 
@@ -51,10 +54,17 @@ private:
     struct VoxelHit {
         Voxel* voxel;
         godot::Vector3i voxel_pos;
-        Face face;
         godot::Vector3 hit_pos;
+        Face face;
     };
 
+public:
+    void paint_face(const VoxelHit& hit, int texture);
+    void set_brush_texture(int value);
+    int  get_brush_texture() const;
+
+private:
+    int brush_texture;
     bool raycast_voxel(godot::Vector3 origin, godot::Vector3 direction, VoxelHit& hit_result);
 
 #pragma endregion
