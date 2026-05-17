@@ -22,6 +22,8 @@ public:
     void upload_buffer();
     void free_mesh();
 
+    VoxelColumn* get_column(int local_x, int local_z);
+
 private:
     godot::LocalVector<VoxelColumn*> columns;
 

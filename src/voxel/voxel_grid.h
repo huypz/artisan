@@ -1,10 +1,13 @@
 #pragma once
 
+#include <cstdint>
 #include <godot_cpp/classes/node3d.hpp>
+#include <godot_cpp/classes/input_event.hpp>
 
-class Voxel;
 class VoxelChunk;
 class VoxelColumn;
+struct Voxel;
+enum Face : uint8_t;
 
 class VoxelGrid : public godot::Node3D {
     GDCLASS(VoxelGrid, godot::Node3D)
@@ -15,6 +18,7 @@ protected:
 public:
     VoxelGrid();
     void _process(double delta) override;
+    void _input(const godot::Ref<godot::InputEvent>& event) override;
     void _enter_tree() override;
     void _exit_tree() override;
 
@@ -23,6 +27,9 @@ public:
 public:
     void build();
     void free();
+
+    Voxel* get_voxel(godot::Vector3 position);
+
     void  set_chunk_count_x(int value);
     int   get_chunk_count_x() const;
     void  set_chunk_count_z(int value);
@@ -41,7 +48,14 @@ private:
 #pragma region Editor
 
 private:
-    void handle_input();
+    struct VoxelHit {
+        Voxel* voxel;
+        godot::Vector3i voxel_pos;
+        Face face;
+        godot::Vector3 hit_pos;
+    };
+
+    bool raycast_voxel(godot::Vector3 origin, godot::Vector3 direction, VoxelHit& hit_result);
 
 #pragma endregion
 };

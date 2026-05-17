@@ -5,8 +5,10 @@
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/viewport.hpp>
+#include <godot_cpp/classes/input_event_mouse_button.hpp>
+#include <godot_cpp/core/math.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
-#include "godot_cpp/variant/utility_functions.hpp"
 #include "voxel/voxel_column.h"
 #include "voxel/voxel_metrics.h"
 #include "voxel_chunk.h"
@@ -29,7 +31,27 @@ VoxelGrid::VoxelGrid() {
 }
 
 void VoxelGrid::_process(double delta) {
-    handle_input();
+
+}
+
+void VoxelGrid::_input(const Ref<InputEvent>& event) {
+    Ref<InputEventMouseButton> mouse = event;
+    if (mouse.is_null()) return;
+
+    if (mouse->get_button_index() == MOUSE_BUTTON_LEFT && mouse->is_pressed()) {
+        Camera3D* camera = get_viewport()->get_camera_3d();
+        if (camera == nullptr) return;
+
+        Vector2 mouse_pos = get_viewport()->get_mouse_position();
+        Vector3 ray_origin = camera->project_ray_origin(mouse_pos);
+        Vector3 ray_dir    = camera->project_ray_normal(mouse_pos);
+
+        VoxelHit hit_result;
+        if (raycast_voxel(ray_origin, ray_dir, hit_result)) {
+            UtilityFunctions::print("hit voxel at ", hit_result.hit_pos, " and face ", hit_result.face);
+
+        }
+    }
 }
 
 void VoxelGrid::_enter_tree() {
@@ -65,6 +87,36 @@ void VoxelGrid::free() {
         }
     }
     chunks.clear();
+}
+
+Voxel* VoxelGrid::get_voxel(Vector3 position) {
+    if (position.x < 0 || position.z < 0) {
+        return nullptr;
+    }
+
+    int chunk_x = (int)Math::floor(position.x) / VoxelMetrics::CHUNK_SIZE_X;
+    int chunk_z = (int)Math::floor(position.z) / VoxelMetrics::CHUNK_SIZE_Z;
+    if (chunk_x < 0 || chunk_x >= chunk_count_x ||
+        chunk_z < 0 || chunk_z >= chunk_count_z) {
+        return nullptr;
+    }
+    VoxelChunk* chunk = chunks[chunk_x + chunk_z * chunk_count_x];
+    if (chunk == nullptr) {
+        return nullptr;
+    }
+    int local_x = (int)Math::floor(position.x) % VoxelMetrics::CHUNK_SIZE_X;
+    int local_z = (int)Math::floor(position.z) % VoxelMetrics::CHUNK_SIZE_Z;
+
+    int y = Math::floor(position.y);
+    if (y < 0 || y >= VoxelMetrics::CHUNK_SIZE_Y) {
+        return nullptr;
+    }
+    VoxelColumn* column = chunk->get_column(local_x, local_z);
+    if (column == nullptr) {
+        return nullptr;
+    }
+
+    return &(*column)[y];
 }
 
 void VoxelGrid::set_chunk_count_x(int value) {
@@ -106,7 +158,7 @@ void VoxelGrid::create_chunks() {
 void VoxelGrid::create_column(int x, int z, int i) {
     Vector3 position(
         x * VoxelMetrics::LENGTH_X + 0.5f,
-        -0.5f,
+        0.5f,
         z * VoxelMetrics::LENGTH_Z + 0.5f
     );
     VoxelColumn* column = memnew(VoxelColumn);
@@ -136,25 +188,65 @@ void VoxelGrid::create_columns() {
 
 #pragma region Editor
 
-void VoxelGrid::handle_input() {
-    if (Input::get_singleton()->is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) {
-        Camera3D* camera = get_viewport()->get_camera_3d();
-        if (camera == nullptr) return;
-        Vector2 mouse_pos = get_viewport()->get_mouse_position();
+bool VoxelGrid::raycast_voxel(Vector3 origin, Vector3 direction, VoxelHit& hit_result) {
+    origin = to_local(origin);
 
-        Vector3 ray_origin = camera->project_ray_origin(mouse_pos);
-        Vector3 ray_dir    = camera->project_ray_normal(mouse_pos);
+    Vector3i voxel_pos(
+        Math::floor(origin.x),
+        Math::floor(origin.y),
+        Math::floor(origin.z)
+    );
 
-        // intersect with Y=0 plane — no physics/collision needed
-        if (ray_dir.y != 0.0f) {
-            float t = -ray_origin.y / ray_dir.y;
-            if (t > 0.0f) {
-                Vector3 world_pos = ray_origin + ray_dir * t;
+    Vector3i step(
+        direction.x > 0 ? 1 : -1,
+        direction.y > 0 ? 1 : -1,
+        direction.z > 0 ? 1 : -1
+    );
 
-                UtilityFunctions::print("touched at ", world_pos);
-            }
+    Vector3 t_delta(
+        Math::abs(1.0f / direction.x),
+        Math::abs(1.0f / direction.y),
+        Math::abs(1.0f / direction.z)
+    );
+
+    Vector3 t_max(
+        ((step.x > 0 ? voxel_pos.x + 1 : voxel_pos.x) - origin.x) / direction.x,
+        ((step.y > 0 ? voxel_pos.y + 1 : voxel_pos.y) - origin.y) / direction.y,
+        ((step.z > 0 ? voxel_pos.z + 1 : voxel_pos.z) - origin.z) / direction.z
+    );
+
+    float t_hit = 0.0f;
+    Face face;
+    const int MAX_STEPS = 20;
+    for (int i = 0; i < MAX_STEPS; i++) {
+        Voxel* voxel = get_voxel(voxel_pos);
+        if (voxel && voxel->type) {
+            hit_result.voxel = voxel;
+            hit_result.voxel_pos = voxel_pos;
+            hit_result.face = face;
+            hit_result.hit_pos = origin + direction * t_hit;
+            return true;
+        }
+
+        if (t_max.x < t_max.y && t_max.x < t_max.z) {
+            t_hit = t_max.x;
+            voxel_pos.x += step.x;
+            t_max.x += t_delta.x;
+            face = step.x > 0 ? Face::LEFT : Face::RIGHT;
+        } else if (t_max.y < t_max.z) {
+            t_hit = t_max.y;
+            voxel_pos.y += step.y;
+            t_max.y += t_delta.y;
+            face = step.y > 0 ? Face::BOTTOM : Face::TOP;
+        } else {
+            t_hit = t_max.z;
+            voxel_pos.z += step.z;
+            t_max.z += t_delta.z;
+            face = step.z > 0 ? Face::BACK : Face::FRONT;
         }
     }
+
+    return false;
 }
 
 #pragma endregion

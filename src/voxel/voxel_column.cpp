@@ -7,6 +7,9 @@ void VoxelColumn::_bind_methods() {}
 VoxelColumn::VoxelColumn() {
     voxels.resize(VoxelMetrics::CHUNK_SIZE_Y);
 
+    for (int i = 0; i < voxels.size(); i++) {
+        voxels[i].type = 0;
+    }
     voxels[0].type = 1;
 }
 

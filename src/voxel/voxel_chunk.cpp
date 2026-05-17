@@ -12,7 +12,12 @@ void VoxelChunk::_bind_methods() {}
 
 void VoxelChunk::_enter_tree() {
     columns.resize(VoxelMetrics::CHUNK_SIZE_X * VoxelMetrics::CHUNK_SIZE_Z);
+    mesh.add_face(Face::RIGHT);
+    mesh.add_face(Face::LEFT);
     mesh.add_face(Face::TOP);
+    mesh.add_face(Face::BOTTOM);
+    mesh.add_face(Face::FRONT);
+    mesh.add_face(Face::BACK);
     mesh.generate_mesh();
 }
 
@@ -46,7 +51,10 @@ void VoxelChunk::build_buffer() {
                 q[0]  = 1.0f; q[1]  = 0.0f; q[2]  = 0.0f; q[3]  = column->world_x;
                 q[4]  = 0.0f; q[5]  = 1.0f; q[6]  = 0.0f; q[7]  = column->world_y + y;
                 q[8]  = 0.0f; q[9]  = 0.0f; q[10] = 1.0f; q[11] = column->world_z;
-                q[12] = 0.0f; q[13] = 0.0f; q[14] = 0.0f; q[15] = 0.0f;
+                q[12] = 2.0f;
+                q[13] = 0.0f;
+                q[14] = 0.0f;
+                q[15] = 0.0f;
             }
         }
     }
@@ -69,8 +77,47 @@ void VoxelChunk::upload_buffer() {
         shader_type spatial;
         render_mode unshaded;
 
+
+        global uniform sampler2D voxel_atlas : source_color, filter_nearest;
+        uniform float atlas_cols = 3;
+        uniform float atlas_rows = 4;
+
+        global uniform sampler2D voxel_table : source_color, filter_nearest;
+        uniform float table_cols = 6;
+        uniform float table_rows = 8;
+
+        varying vec3 normal;
+        varying vec4 custom;
+
+        void vertex() {
+            normal = NORMAL;
+            custom = INSTANCE_CUSTOM;
+        }
+
         void fragment() {
-            ALBEDO = vec3(1.0f, 0.0f, 0.0f);
+            vec3 n = abs(normal);
+           	float face;
+           	if (n.x > 0.9)
+          		face = normal.x > 0.0 ? 0.0 : 1.0;
+           	else if (n.y > 0.9)
+          		face = normal.y > 0.0 ? 2.0 : 3.0;
+           	else if (n.z > 0.9)
+          		face = normal.z > 0.0 ? 4.0 : 5.0;
+
+           	float voxel_id = custom.r;
+           	float texture_id = texture(voxel_table, vec2((face + 0.5) / table_cols, (voxel_id + 0.5) / table_rows)).r;
+           	texture_id = round(texture_id);
+
+            float col = mod(texture_id, atlas_cols);
+            float row = floor(texture_id / atlas_cols);
+            vec2 tile_size = vec2(
+                1.0f / float(atlas_cols),
+                1.0f / float(atlas_rows)
+            );
+            vec2 tile_offset = vec2(col, row) * tile_size;
+            vec2 final_uv = tile_offset + UV * tile_size;
+
+            ALBEDO = texture(voxel_atlas, final_uv).rgb;
         }
     )");
     material_rid = rs->material_create();
@@ -86,4 +133,13 @@ void VoxelChunk::free_mesh() {
     rs->free_rid(multimesh_rid);
     rs->free_rid(material_rid);
     rs->free_rid(shader_rid);
+}
+
+VoxelColumn* VoxelChunk::get_column(int local_x, int local_z) {
+    if (local_x < 0 || local_z < 0) {
+        return nullptr;
+    }
+
+    int index = local_x + local_z * VoxelMetrics::CHUNK_SIZE_X;
+    return index < columns.size() ? columns[index] : nullptr;
 }
