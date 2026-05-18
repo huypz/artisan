@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://bo6bcshs33c3c"]
+
+[ext_resource type="Script" uid="uid://dv4i3g8rmeprj" path="res://scripts/ui/voxel_palette.gd" id="1_5hf8q"]
+[ext_resource type="Theme" uid="uid://kfw5q5bd6oho" path="res://assets/ui/theme.tres" id="1_dqruj"]
+[ext_resource type="Script" uid="uid://btccq3oacfso7" path="res://scripts/ui/editor_ui.gd" id="2_0qda5"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_shsim"]
+
+[node name="EditorUI" type="Control" unique_id=514194965]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_dqruj")
+script = ExtResource("2_0qda5")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1081565422]
+
+[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer" unique_id=1319594104]
+custom_minimum_size = Vector2(160, 0)
+anchors_preset = -1
+anchor_left = 0.98
+anchor_top = 0.02
+anchor_right = 0.99
+anchor_bottom = 0.98
+grow_horizontal = 0
+grow_vertical = 2
+script = ExtResource("1_5hf8q")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/PanelContainer" unique_id=2093788786]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=1598165190]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "preview"
+horizontal_alignment = 1
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=2112772122]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="SubViewport" type="SubViewport" parent="CanvasLayer/PanelContainer/VBoxContainer/SubViewportContainer" unique_id=2116512593]
+own_world_3d = true
+handle_input_locally = false
+size = Vector2i(128, 128)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="CanvasLayer/PanelContainer/VBoxContainer/SubViewportContainer/SubViewport" unique_id=85974010]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CanvasLayer/PanelContainer/VBoxContainer/SubViewportContainer/SubViewport" unique_id=818858753]
+mesh = SubResource("BoxMesh_shsim")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/PanelContainer/VBoxContainer" unique_id=153594638]
+custom_minimum_size = Vector2(144, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="CanvasLayer/PanelContainer/VBoxContainer/ScrollContainer" unique_id=1518497233]
+layout_mode = 2
+columns = 4

@@ -1,14 +1,16 @@
 #pragma once
 
-#include "godot_cpp/classes/control.hpp"
 #include "godot_cpp/classes/node.hpp"
+
+class World;
+class GUI;
 
 class Main : public godot::Node {
     GDCLASS(Main, godot::Node)
 
 private:
-    godot::Node *world = nullptr;
-    godot::Control *gui = nullptr;
+    World *world = nullptr;
+    GUI *gui = nullptr;
 
 protected:
     static void _bind_methods();

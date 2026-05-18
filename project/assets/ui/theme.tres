@@ -1,0 +1,7 @@
+[gd_resource type="Theme" format=3 uid="uid://kfw5q5bd6oho"]
+
+[ext_resource type="FontFile" uid="uid://dw6io0vr7g51l" path="res://assets/fonts/fusion-pixel-8px-proportional-latin.ttf" id="1_6cha6"]
+
+[resource]
+default_font = ExtResource("1_6cha6")
+default_font_size = 8

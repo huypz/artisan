@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://42sw0apecpt1"
-path="res://.godot/imported/voxel_table.exr-277bbe8fcccb6ab15ed9f5c1731f986c.ctex"
+uid="uid://dq2lr1rm2cr1b"
+path="res://.godot/imported/tile_atlas.png-9af3803bd462683cdc195cbf1ccc35ac.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/voxel/voxel_table.exr"
-dest_files=["res://.godot/imported/voxel_table.exr-277bbe8fcccb6ab15ed9f5c1731f986c.ctex"]
+source_file="res://assets/textures/tiles/tile_atlas.png"
+dest_files=["res://.godot/imported/tile_atlas.png-9af3803bd462683cdc195cbf1ccc35ac.ctex"]
 
 [params]
 

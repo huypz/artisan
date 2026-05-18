@@ -20,6 +20,11 @@ config/icon="res://icon.svg"
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[gui]
+
+theme/custom="uid://kfw5q5bd6oho"
+theme/custom_font="uid://dw6io0vr7g51l"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
@@ -34,11 +39,7 @@ camera_angle={
 "type": "float",
 "value": 0.0
 }
-voxel_atlas={
+tile_atlas={
 "type": "sampler2D",
-"value": "res://assets/textures/voxel/voxel_atlas.png"
-}
-voxel_table={
-"type": "sampler2D",
-"value": "res://assets/textures/voxel/voxel_table.exr"
+"value": "res://assets/textures/tiles/tile_atlas.png"
 }

@@ -45,12 +45,20 @@ void VoxelChunk::build_mesh() {
     shader_rid = rs->shader_create();
     rs->shader_set_code(shader_rid, R"(
         shader_type spatial;
-        render_mode unshaded, cull_back;
+        render_mode unshaded;
 
-        global uniform sampler2D voxel_atlas : source_color, filter_nearest;
+        global uniform float camera_angle;
+
+        global uniform sampler2D tile_atlas : source_color, filter_nearest;
+
+        void vertex() {
+            //vec3 world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0f)).xyz;
+            //VERTEX.x = VERTEX.x - sin(camera_angle) * (world_position.y);
+            //VERTEX.z = VERTEX.z - cos(camera_angle) * (world_position.y);
+        }
 
         void fragment() {
-            ALBEDO = texture(voxel_atlas, UV).rgb;
+            ALBEDO = texture(tile_atlas, UV).rgb;
         }
     )");
     material_rid = rs->material_create();

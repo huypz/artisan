@@ -60,11 +60,11 @@ private:
 
 public:
     void paint_face(const VoxelHit& hit, int texture);
-    void set_brush_texture(int value);
-    int  get_brush_texture() const;
+    void set_brush_tile_id(int value);
+    int  get_brush_tile_id() const;
 
 private:
-    int brush_texture;
+    int brush_tile_id;
     bool raycast_voxel(godot::Vector3 origin, godot::Vector3 direction, VoxelHit& hit_result);
 
 #pragma endregion

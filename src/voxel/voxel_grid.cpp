@@ -25,8 +25,8 @@ void VoxelGrid::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::INT, "chunk_count_z"), "set_chunk_count_z", "get_chunk_count_z");
 
     // Editor
-    ClassDB::bind_method(D_METHOD("set_brush_texture", "value"), &VoxelGrid::set_brush_texture);
-    ClassDB::bind_method(D_METHOD("get_brush_texture"),          &VoxelGrid::get_brush_texture);
+    ClassDB::bind_method(D_METHOD("set_brush_texture", "value"), &VoxelGrid::set_brush_tile_id);
+    ClassDB::bind_method(D_METHOD("get_brush_texture"),          &VoxelGrid::get_brush_tile_id);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "brush_texture"), "set_brush_texture", "get_brush_texture");
 }
 
@@ -34,7 +34,7 @@ VoxelGrid::VoxelGrid() {
     chunk_count_x = 1;
     chunk_count_y = 1;
     chunk_count_z = 1;
-    brush_texture = 1;
+    brush_tile_id = 1;
 }
 
 void VoxelGrid::_process(double delta) {
@@ -55,7 +55,7 @@ void VoxelGrid::_input(const Ref<InputEvent>& event) {
 
         VoxelHit hit_result;
         if (raycast_voxel(ray_origin, ray_dir, hit_result)) {
-            paint_face(hit_result, brush_texture);
+            paint_face(hit_result, brush_tile_id);
         }
     }
 }
@@ -190,12 +190,12 @@ void VoxelGrid::paint_face(const VoxelHit& hit, int texture) {
     chunk->set_voxel(local_index, new_voxel);
 }
 
-void VoxelGrid::set_brush_texture(int value) {
-    brush_texture = value;
+void VoxelGrid::set_brush_tile_id(int value) {
+    brush_tile_id = value;
 }
 
-int VoxelGrid::get_brush_texture() const {
-    return brush_texture;
+int VoxelGrid::get_brush_tile_id() const {
+    return brush_tile_id;
 }
 
 bool VoxelGrid::raycast_voxel(Vector3 origin, Vector3 direction, VoxelHit& hit_result) {
